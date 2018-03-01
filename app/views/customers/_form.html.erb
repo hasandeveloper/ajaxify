@@ -1,0 +1,234 @@
+<%= form_with(model: customer, local: true, id: 'customer_form') do |form| %>
+  <% if customer.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h2>
+
+      <ul>
+        <% customer.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :state_id %>
+    <%= form.collection_select :state_id, State.all, :id, :name, {prompt: "Select"}, {id: :customer_state_id} %>
+    <span id="stateError"></span>
+  </div>
+
+  <div class="field">
+    <%= form.label :city_id %>
+    <%= form.collection_select :city_id, City.all, :id, :name, {prompt: "Select"}, {id: :customer_city_id} %>
+    <span id="cityError"></span>
+  </div>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name, id: :customer_name %>
+    <span id="nameError"></span>
+  </div>
+
+  <div class="field">
+    <%= form.label :email %>
+    <%= form.text_field :email, id: :customer_email %>
+    <span id="emailError"></span>
+  </div>
+
+  <div class="field">
+    <%= form.label :mobile %>
+    <%= form.text_field :mobile, id: :customer_mobile %>
+    <span id="mobileError"></span>
+  </div>
+
+  <div class="actions">
+    <%= form.submit "Submit", id: 'submit' %>
+  </div>
+<% end %>
+
+
+<script>
+
+    var numberFormat = /^\d+$/;
+    var emailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var nameFormat = /^[a-zA-Z]*$/;
+
+    var stateHandle = document.getElementById('customer_state_id');
+    var cityHandle = document.getElementById('customer_city_id');
+    var nameHandle = document.getElementById('customer_name');
+    var emailHandle = document.getElementById('customer_email');
+    var mobileHandle = document.getElementById('customer_mobile');
+    var formHandle = document.getElementById('customer_form');
+    var submitHandle = document.getElementById('submit');
+
+    var stateErrorHandle = document.getElementById('stateError');
+    var cityErrorHandle = document.getElementById('cityError');
+    var nameErrorHandle = document.getElementById('nameError');
+    var emailErrorHandle = document.getElementById('emailError');
+    var mobileErrorHandle = document.getElementById('mobileError'); // $('#mobileError')
+
+    var validator = {
+        stateValid: false,
+        cityValid: false,
+        nameValid: false,
+        emailValid: false,
+        mobileValid: false
+    }
+
+    function stateValidation(){
+        if(stateHandle.value === ""){
+            validator.stateValid = false;
+            stateErrorHandle.innerHTML = "can't be blank";
+        } else {
+            validator.stateValid = true;
+            stateErrorHandle.innerHTML = "";
+        }
+    }
+
+    function cityValidation(){
+        if(cityHandle.value === ""){
+            validator.cityValid = false;
+            cityErrorHandle.innerHTML = "can't be blank";
+        } else {
+            validator.cityValid = true;
+            cityErrorHandle.innerHTML = "";
+        }
+    }
+
+    function nameValidation(){
+        if(nameHandle.value === ""){
+            validator.nameValid = false;
+            nameErrorHandle.innerHTML = "can't be blank";
+        } else if (!nameFormat.test(nameHandle.value)) {
+            validator.nameValid = false;
+            nameErrorHandle.innerHTML = 'should only be alphabets'
+        } else {
+            validator.nameValid = true;
+            nameErrorHandle.innerHTML = "";
+        }
+    }
+
+    function emailValidation(){
+        if(emailHandle.value === ""){
+            validator.emailValid = false;
+            emailErrorHandle.innerHTML = "can't be blank";
+        } else if(!emailFormat.test(emailHandle.value)) {
+            validator.emailValid = false;
+            emailErrorHandle.innerHTML = "should be a valid email"
+        } else {
+            validator.emailValid = true;
+            emailErrorHandle.innerHTML = "";
+        }
+    }
+
+    function mobileValidation(){
+        if(mobileHandle.value === ""){
+            validator.mobileValid = false;
+            mobileErrorHandle.innerHTML = "can't be blank";
+        } else if (!numberFormat.test(mobileHandle.value)){
+            validator.mobileValid = false;
+            mobileErrorHandle.innerHTML = "should be a number";
+        } else if( mobileHandle.value.length !== 10 ){
+            validator.mobileValid = false;
+            mobileErrorHandle.innerHTML = "should be 10 digits";    } else {
+            validator.mobileValid = true;
+            mobileErrorHandle.innerHTML = "";
+        }
+    }
+
+    formHandle.addEventListener('submit', function(e){
+        stateValidation();
+        cityValidation();
+        nameValidation();
+        emailValidation();
+        mobileValidation();
+        if(Object.values(validator).includes(false)){
+            e.preventDefault();
+            setTimeout(function(){
+                submitHandle.disabled = false;
+            },100);
+        } else {
+            e.preventDefault()
+            var formData = {
+                "customer":{
+                    "name": nameHandle.value,
+                    "mobile": mobileHandle.value,
+                    "email": emailHandle.value,
+                    "state_id": stateHandle.value,
+                    "city_id": cityHandle.value
+                }
+            }
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/customers', true)
+            xhr.onreadystatechange = function(){
+                if(xhr.readyState === 4 && xhr.status === 200){
+                    var customer = JSON.parse(xhr.responseText);
+                    formHandle.reset()
+                    setTimeout(function(){
+                        submitHandle.disabled = false
+                    }, 100)
+
+                    tr = document.createElement('tr'); //<tr> </tr>
+
+                    // creating td for state info
+                    stateTd = document.createElement('td'); // <td> </td>
+                    stateText = document.createTextNode(customer.state_name) //1
+                    stateTd.appendChild(stateText) // <td> 1 </td>
+
+                    // creating td for city info
+                    cityTd = document.createElement('td') // <td> </td>
+                    cityText = document.createTextNode(customer.city_name) //1
+                    cityTd.appendChild(cityText); // <td> 1 </td>
+
+                    //creating td for name info
+                    nameTd = document.createElement('td')
+                    nameText = document.createTextNode(customer.name)
+                    nameTd.appendChild(nameText);
+
+                    tr.appendChild(stateTd) // <tr> <td> 1 <td> </tr>
+
+                    tr.appendChild(cityTd) // <tr> <td> 1 </td> <td> 1 </td> </tr>
+
+                    tr.appendChild(nameTd) // <tr> <td> 1 </td> <td> 1 </td> <td> name </td> </tr>
+
+                    document.getElementById('body').appendChild(tr);
+                    document.querySelector('#count').innerText = customer.customers_count//updating the count of numbers
+
+
+                }
+            }
+
+            xhr.setRequestHeader('Content-Type', 'application/json')
+
+            xhr.send(JSON.stringify(formData))
+
+        }
+    }, false);
+
+    stateHandle.addEventListener('change', function(){
+        if(stateHandle.value !== ""){
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', `/states/get_cities?state_id=${stateHandle.value}`, true);
+            xhr.onreadystatechange = function(){
+                if(xhr.readyState === 4 && xhr.status === 200){
+                    var cities = JSON.parse(xhr.responseText);
+                    cityHandle.innerHTML = "";
+                    cities.forEach(function(city){
+                        var option = document.createElement('option'); // <option> </option>
+                        var optValue = document.createAttribute('value'); // value=""
+                        optValue.value = city.id; // value="1"
+                        option.setAttributeNode(optValue); // <option value="1"> </option>
+                        var text = document.createTextNode(city.name); // Bangalore
+                        option.appendChild(text); // <option value="1">Bangalore</option>
+                        cityHandle.appendChild(option);
+                    });
+                }
+            };
+            xhr.send();
+        }
+    }, false);
+
+</script>
+
+

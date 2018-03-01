@@ -1,0 +1,13 @@
+<%if @person.valid? %>
+$('#new_person')[0].reset();
+$('#errorMessage').hide();
+
+$('#notice').html('New Person added - <%= @person.name %>');
+
+$('#count').html("<%= Person.count %>");
+
+$('#body').append('<%= escape_javascript render "person" %>');
+
+<% else %>
+$('#errorMessage').html('<%= escape_javascript render "error" %>')
+<%end%>

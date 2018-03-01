@@ -1,0 +1,41 @@
+<%= form_with(model: state, local: true) do |form| %>
+  <% if state.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(state.errors.count, "error") %> prohibited this state from being saved:</h2>
+
+      <ul>
+      <% state.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :name %>
+    <%= form.text_field :name, id: :state_name %>
+    <span id="nameError"></span>
+  </div>
+
+  <div class="actions">
+    <%= form.submit %>
+  </div>
+
+  <script>
+    var nameHandle = document.getElementById("state_name")
+      var nameErrorHandle = document.getElementById("nameError")
+
+      nameHandle.addEventListener('blur',function(){
+          var xhr = new XMLHttpRequest
+          xhr.open('GET','/states/check_name_present?name=' + nameHandle.value, true)
+          xhr.onreadystatechange = function(){
+              if(xhr.readyState === 4 && xhr.status ===200){
+                  var response = JSON.parse(xhr.responseText)
+                  nameErrorHandle.innerHTML = response.msg
+
+              }
+          }
+          xhr.send()
+      })
+  </script>
+<% end %>
